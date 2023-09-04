@@ -11,13 +11,16 @@ import androidx.annotation.NonNull;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
-    private final Bitmap gameBackground;
+    private final Bitmap gameBackground, basketball, basketball_ring;
 
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
 
         gameBackground = BitmapFactory.decodeResource(getResources(), R.drawable.game_bg);
+        basketball = BitmapFactory.decodeResource(getResources(), R.drawable.basketball);
+        basketball_ring = BitmapFactory.decodeResource(getResources(), R.drawable.basketball_ring);
+
     }
 
     @Override
@@ -26,6 +29,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (canvas != null) {
             if (gameBackground != null) {
                 canvas.drawBitmap(gameBackground, 0, 0, null);
+            }
+            if (basketball != null) {
+                canvas.drawBitmap(basketball, 0, 0, null);
+            }
+            if (basketball_ring != null) {
+                canvas.drawBitmap(basketball_ring, 0, 0, null);
             }
             surfaceHolder.unlockCanvasAndPost(canvas);
         }
