@@ -3,10 +3,10 @@ package com.vvv.bball;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-public class Basketball extends GameObject {
+public class BasketballRing extends GameObject {
     private final Bitmap bitmap;
 
-    public Basketball(Bitmap bitmap, int x, int y) {
+    public BasketballRing(Bitmap bitmap, int x, int y) {
         super(x, y);
         this.bitmap = bitmap;
     }
@@ -20,7 +20,7 @@ public class Basketball extends GameObject {
 
     @Override
     public void update() {
-        // Implement your update logic for the basketball, if needed
+        // Implement your update logic for the basketball ring, if needed
     }
 }
 
