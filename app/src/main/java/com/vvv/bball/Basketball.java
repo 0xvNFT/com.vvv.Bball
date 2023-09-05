@@ -33,6 +33,11 @@ public class Basketball extends GameObject {
     @Override
     public void update() {
     }
+
+    public void applyForce(float forceX, float forceY) {
+        x += forceX;
+        y += forceY;
+    }
 }
 
 
