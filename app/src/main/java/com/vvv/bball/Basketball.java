@@ -2,42 +2,71 @@ package com.vvv.bball;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
+import android.graphics.BitmapFactory;
 
-public class Basketball extends GameObject {
-    protected final Bitmap basketballBitmap;
-    private final int speed;
+import java.util.ArrayList;
 
-    public Basketball(Bitmap basketballBitmap, int speed) {
-        super(basketballBitmap, 0, 0);
-        this.basketballBitmap = basketballBitmap;
-        this.speed = speed;
+public class Basketball {
+    final float ratioMtoPX;
+    final float MAX_VELOCITY;
+    public float prevX, prevY, updatedX, updatedY, initialX, initialY, originalX, originalY;
+    public boolean thrown;
+    public short basketballWidth, basketballHeight;
+    public boolean isTouched = false;
+    Bitmap basketballBitmap;
+    float percentOfPull;
+    short maxBallPull;
+    byte quarter;
+    float time;
+    float GRAVITY;
+    float removeBall_time;
+    float v, vx, vy, v0y;
+    byte collision;
+    byte howManyCols;
+    byte floorHitCount;
+    ArrayList<Float> dotArrayListX;
+    ArrayList<Float> dotArrayListY;
+    private final float screenWidth;
+    private final float screenHeight;
 
-        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-        int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+    public Basketball(Resources res, float screenWidth, float screenHeight) {
 
-        int basketballWidth = basketballBitmap.getWidth();
-        int basketballHeight = basketballBitmap.getHeight();
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
 
-        x = (screenWidth - basketballWidth) / 2.0f;
-        y = screenHeight - basketballHeight - 50;
-    }
+        ratioMtoPX = screenWidth / 14f;
 
-    @Override
-    public void draw(Canvas canvas) {
-        if (basketballBitmap != null) {
-            canvas.drawBitmap(basketballBitmap, x, y, null);
-        }
-    }
+        updatedX = (int) (screenWidth - 2 * ratioMtoPX);
+        updatedY = (int) (screenHeight - 2 * ratioMtoPX);
 
-    @Override
-    public void update() {
-    }
+        prevX = updatedX;
+        prevY = updatedY;
 
-    public void applyForce(float forceX, float forceY) {
-        x += forceX;
-        y += forceY;
+        basketballWidth = (short) (2 * ratioMtoPX);
+        basketballHeight = (short) (2 * ratioMtoPX);
+
+        initialX = updatedX + basketballWidth / 2f;
+        initialY = updatedY + basketballHeight / 2f;
+
+        originalX = initialX;
+        originalY = initialY;
+
+        basketballBitmap = BitmapFactory.decodeResource(res, R.drawable.basketball);
+        basketballBitmap = Bitmap.createScaledBitmap(basketballBitmap, basketballWidth, basketballHeight, false);
+
+        GRAVITY = 9.8f * 6.3f * ratioMtoPX;
+        MAX_VELOCITY = 21 * 1.4f * ratioMtoPX;
+        time = 0;
+
+        howManyCols = 0;
+        floorHitCount = 0;
+        removeBall_time = 0;
+
+        collision = 0;
+        percentOfPull = 0;
+
+        dotArrayListX = new ArrayList<>();
+        dotArrayListY = new ArrayList<>();
+
     }
 }
-
-
