@@ -9,7 +9,7 @@ public class Basketball extends GameObject {
     protected final Bitmap basketballBitmap;
     private final int speed;
     private float velocityX, velocityY;
-    private boolean isLaunched = false;
+    private boolean isThrow = false;
 
     public Basketball(Bitmap basketballBitmap, int speed) {
         super(basketballBitmap, 0, 0);
@@ -35,16 +35,10 @@ public class Basketball extends GameObject {
 
     @Override
     public void update() {
-        if (isLaunched) {
-            // Move the basketball based on its velocity
+        if (isThrow) {
             x += velocityX;
             y += velocityY;
         }
-    }
-
-    public void applyForce(float forceX, float forceY) {
-        x += forceX;
-        y += forceY;
     }
 
     public boolean isTouched(float x, float y) {
@@ -52,8 +46,8 @@ public class Basketball extends GameObject {
                 && y > this.y && y < this.y + basketballBitmap.getHeight();
     }
 
-    public void launch(float startX, float startY, float endX, float endY) {
-        if (!isLaunched) {
+    public void isThrown(float startX, float startY, float endX, float endY) {
+        if (!isThrow) {
             // Log touch coordinates
             Log.d("Launch", "StartX: " + startX + ", StartY: " + startY + ", EndX: " + endX + ", EndY: " + endY);
 
@@ -69,13 +63,8 @@ public class Basketball extends GameObject {
             // Log velocity components
             Log.d("Launch", "VelocityX: " + velocityX + ", VelocityY: " + velocityY);
 
-            isLaunched = true;
+            isThrow = true;
         }
-    }
-
-
-    public boolean isLaunched() {
-        return isLaunched;
     }
 }
 

@@ -1,7 +1,7 @@
 package com.vvv.bball;
 
 public class GameThread extends Thread {
-    private static final long FRAME_RATE = 16; // 60 FPS (1000 milliseconds / 60 frames)
+    private static final long FRAME_RATE = 16;
 
     private final GameView gameView;
     private boolean isRunning = false;
@@ -24,7 +24,6 @@ public class GameThread extends Thread {
             long endTime = System.currentTimeMillis();
             long frameTime = endTime - startTime;
 
-            // Add a delay to achieve the desired frame rate
             if (frameTime < FRAME_RATE) {
                 try {
                     Thread.sleep(FRAME_RATE - frameTime);

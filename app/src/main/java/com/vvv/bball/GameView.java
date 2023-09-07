@@ -24,7 +24,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
     private boolean isBasketballTouched = false;
     private float touchX, touchY;
-    private float launchStartX, launchStartY;
+    private float throwStartX, throwStartY;
 
     public GameView(Context context) {
         super(context);
@@ -58,7 +58,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
 
             if (isBasketballTouched) {
-                // Draw the trajectory path as a dotted line
+
                 Paint pathPaint = new Paint();
                 pathPaint.setColor(Color.WHITE);
                 pathPaint.setStyle(Paint.Style.STROKE);
@@ -66,15 +66,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 pathPaint.setPathEffect(new DashPathEffect(new float[]{10, 10}, 0));
 
                 Path trajectoryPath = new Path();
-                trajectoryPath.moveTo(launchStartX, launchStartY);
-                // Calculate and add points to represent the trajectory (you can use physics equations)
-                // For a simple example, you can just add a line from launch start to touch point:
+                trajectoryPath.moveTo(throwStartX, throwStartY);
+
                 trajectoryPath.lineTo(touchX, touchY);
 
                 canvas.drawPath(trajectoryPath, pathPaint);
             }
 
-            // Draw the basketball last
             if (basketball != null) {
                 basketball.draw(canvas);
             }
@@ -90,17 +88,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // Check if the touch is within the basketball's bounds
                 if (basketball.isTouched(x, y)) {
                     isBasketballTouched = true;
                     touchX = x;
                     touchY = y;
-                    launchStartX = x; // Record the launch start point
-                    launchStartY = y;
+                    throwStartX = x;
+                    throwStartY = y;
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                // Update touch coordinates if the basketball is still being touched
                 if (isBasketballTouched) {
                     touchX = x;
                     touchY = y;
@@ -108,7 +104,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 break;
             case MotionEvent.ACTION_UP:
                 isBasketballTouched = false;
-                basketball.launch(launchStartX, launchStartY, x, y);
+                basketball.isThrown(throwStartX, throwStartY, x, y);
 
                 break;
         }
@@ -121,7 +117,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         gameThread = new GameThread(this);
         gameThread.startThread();
-
     }
 
     @Override
