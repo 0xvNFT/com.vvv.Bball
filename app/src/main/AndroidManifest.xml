@@ -18,10 +18,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".GameActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>

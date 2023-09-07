@@ -1,166 +1,143 @@
 package com.vvv.bball;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class GameView extends SurfaceView implements Runnable {
+import androidx.annotation.NonNull;
 
-    private final GameActivity activity;
-    private final short screenWidth, screenHeight;
-    private final Context gameActivityContext;
-    float SLEEP_MILLIS;
-    private boolean isPlaying;
-    private final Basketball basketball;
-    private final Background background;
-    //private final Ground ground;
-    private final Basket basket;
-    private Thread thread;
-    private final float game_time;
-    private byte quarterOfThrow;
+public class GameView extends SurfaceView implements SurfaceHolder.Callback {
+    private final SurfaceHolder surfaceHolder;
+    private final boolean isRunning = false;
+    private Basketball basketball;
+    private BasketballRing basketballRing;
+    private Bitmap gameBackground;
+    private float scaleX, scaleY;
+    private GameThread gameThread;
+    private boolean isBasketballTouched = false;
+    private float touchX, touchY;
+    private float launchStartX, launchStartY;
 
-    public GameView(GameActivity activity, short screenWidth, short screenHeight) {
+    public GameView(Context context) {
+        super(context);
+        surfaceHolder = getHolder();
+        surfaceHolder.addCallback(this);
 
-        super(activity);
-        this.activity = activity;
-        gameActivityContext = activity;
-
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
-
-        isPlaying = true;
-
-        background = new Background(activity.getResources(), screenWidth, screenHeight);
-        basketball = new Basketball(activity.getResources(), screenWidth, screenHeight);
-        basket = new Basket(activity.getResources(), screenWidth, screenHeight);
-        //ground = new Ground(activity.getResources(), screenWidth + 100, screenHeight);
-
-        game_time = 0;
-        quarterOfThrow = 0;
-        basketball.thrown = false;
+        initializeResources(context);
 
     }
 
-    @Override
-    public void run() {
-        while (isPlaying) {
-            sleep();
-            update();
-            draw();
-        }
-
+    private void initializeResources(Context context) {
+        gameBackground = BitmapFactory.decodeResource(context.getResources(), R.drawable.game_bg);
+        basketball = new Basketball(BitmapFactory.decodeResource(getResources(), R.drawable.basketball), 10);
+        basketballRing = new BasketballRing(BitmapFactory.decodeResource(getResources(), R.drawable.basketball_ring), 10);
     }
 
-    public void update() {
+    public void render() {
+        Canvas canvas = surfaceHolder.lockCanvas();
+        if (canvas != null) {
+            if (gameBackground != null) {
+                scaleX = (float) canvas.getWidth() / gameBackground.getWidth();
+                scaleY = (float) canvas.getHeight() / gameBackground.getHeight();
 
-        if (basketball.thrown) {
-            basketball.prevX = basketball.updatedX;
-            basketball.prevY = basketball.updatedY;
+                Bitmap scaledBackground = Bitmap.createScaledBitmap(gameBackground, canvas.getWidth(), canvas.getHeight(), true);
 
-            //physicsUpdateNoCol();
-        } else if (basketball.isTouched)
-            quarterOfThrow = basketball.quarter;
+                canvas.drawBitmap(scaledBackground, scaleX, scaleY, null);
 
-        basketball.dotArrayListX.add(basketball.prevX + fixX());
-        basketball.dotArrayListY.add(basketball.prevY + fixY());
-
-    }
-
-//    public void physicsUpdateNoCol() {
-//
-//        if (basketball.isTouched) {
-//            basketball.prevX = basketball.updatedX;
-//            basketball.prevY = basketball.updatedY;
-//        }
-//    }
-
-    public void draw() {
-
-        if (getHolder().getSurface().isValid()) {
-            Canvas canvas = getHolder().lockCanvas();
-            //canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
-
-            canvas.drawBitmap(background.backgroundBitmap, 0, 0, null);
-//            canvas.drawBitmap(background.developerBitmap, 0, 0, null);
-
-
-            if (basketball.time > 0.032)
-                for (short i = 0; i < basketball.dotArrayListX.size() - 1; i++)
-                    try {
-                        canvas.drawLine(basketball.dotArrayListX.get(i), basketball.dotArrayListY.get(i), basketball.dotArrayListX.get(i + 1), basketball.dotArrayListY.get(i + 1), null);
-                    } catch (Exception ignored) {
-
-                    }
-
-            canvas.drawBitmap(basketball.basketballBitmap, basketball.updatedX, basketball.updatedY, null);
-            //canvas.drawBitmap(ground.groundBitmap, ground.x, ground.y, null);
-
-            if (!basketball.thrown) {
-                basketball.v = 0;
-                basketball.vx = 0;
-                basketball.vy = 0;
             }
-            getHolder().unlockCanvasAndPost(canvas);
+            if (basketballRing != null) {
+                basketballRing.draw(canvas);
+            }
+
+            if (isBasketballTouched) {
+                // Draw the trajectory path as a dotted line
+                Paint pathPaint = new Paint();
+                pathPaint.setColor(Color.WHITE);
+                pathPaint.setStyle(Paint.Style.STROKE);
+                pathPaint.setStrokeWidth(2);
+                pathPaint.setPathEffect(new DashPathEffect(new float[]{10, 10}, 0));
+
+                Path trajectoryPath = new Path();
+                trajectoryPath.moveTo(launchStartX, launchStartY);
+                // Calculate and add points to represent the trajectory (you can use physics equations)
+                // For a simple example, you can just add a line from launch start to touch point:
+                trajectoryPath.lineTo(touchX, touchY);
+
+                canvas.drawPath(trajectoryPath, pathPaint);
+            }
+
+            // Draw the basketball last
+            if (basketball != null) {
+                basketball.draw(canvas);
+            }
+
+            surfaceHolder.unlockCanvasAndPost(canvas);
         }
-
-    }
-
-    private void sleep() {
-
-        SLEEP_MILLIS = 1000 / 120f;
-
-        try {
-            Thread.sleep((long) (SLEEP_MILLIS / 2));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                isPlaying = false;
-                break;
-            case MotionEvent.ACTION_UP:
-
+                // Check if the touch is within the basketball's bounds
+                if (basketball.isTouched(x, y)) {
+                    isBasketballTouched = true;
+                    touchX = x;
+                    touchY = y;
+                    launchStartX = x; // Record the launch start point
+                    launchStartY = y;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
-
+                // Update touch coordinates if the basketball is still being touched
+                if (isBasketballTouched) {
+                    touchX = x;
+                    touchY = y;
+                }
                 break;
-            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                isBasketballTouched = false;
+                basketball.launch(launchStartX, launchStartY, x, y);
 
                 break;
         }
 
-        return super.onTouchEvent(event);
+        return true;
     }
 
-    public void resume() {
-        isPlaying = true;
-        thread = new Thread(this);
-        thread.start();
+
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+        gameThread = new GameThread(this);
+        gameThread.startThread();
+
     }
 
-    public void pause() {
-        try {
-            isPlaying = false;
-            thread.join();
-            Thread.sleep(100);
+    @Override
+    public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    }
+
+    @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
+        if (gameThread != null) {
+            gameThread.stopThread();
         }
     }
 
-    public float fixX() {
-        return basketball.basketballWidth / 2f;
-    }
-
-    public float fixY() {
-        return basketball.basketballHeight / 2f;
+    public void update() {
+        basketball.update();
+        basketballRing.update();
     }
 }

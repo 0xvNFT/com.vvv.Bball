@@ -2,71 +2,81 @@ package com.vvv.bball;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.util.Log;
 
-import java.util.ArrayList;
+public class Basketball extends GameObject {
+    protected final Bitmap basketballBitmap;
+    private final int speed;
+    private float velocityX, velocityY;
+    private boolean isLaunched = false;
 
-public class Basketball {
-    final float ratioMtoPX;
-    final float MAX_VELOCITY;
-    public float prevX, prevY, updatedX, updatedY, initialX, initialY, originalX, originalY;
-    public boolean thrown;
-    public short basketballWidth, basketballHeight;
-    public boolean isTouched = false;
-    Bitmap basketballBitmap;
-    float percentOfPull;
-    short maxBallPull;
-    byte quarter;
-    float time;
-    float GRAVITY;
-    float removeBall_time;
-    float v, vx, vy, v0y;
-    byte collision;
-    byte howManyCols;
-    byte floorHitCount;
-    ArrayList<Float> dotArrayListX;
-    ArrayList<Float> dotArrayListY;
-    private final float screenWidth;
-    private final float screenHeight;
+    public Basketball(Bitmap basketballBitmap, int speed) {
+        super(basketballBitmap, 0, 0);
+        this.basketballBitmap = basketballBitmap;
+        this.speed = speed;
 
-    public Basketball(Resources res, float screenWidth, float screenHeight) {
+        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+        int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
 
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
+        int basketballWidth = basketballBitmap.getWidth();
+        int basketballHeight = basketballBitmap.getHeight();
 
-        ratioMtoPX = screenWidth / 14f;
+        x = (screenWidth - basketballWidth) / 2.0f;
+        y = screenHeight - basketballHeight - 50;
+    }
 
-        updatedX = (int) (screenWidth - 2 * ratioMtoPX);
-        updatedY = (int) (screenHeight - 2 * ratioMtoPX);
+    @Override
+    public void draw(Canvas canvas) {
+        if (basketballBitmap != null) {
+            canvas.drawBitmap(basketballBitmap, x, y, null);
+        }
+    }
 
-        prevX = updatedX;
-        prevY = updatedY;
+    @Override
+    public void update() {
+        if (isLaunched) {
+            // Move the basketball based on its velocity
+            x += velocityX;
+            y += velocityY;
+        }
+    }
 
-        basketballWidth = (short) (2 * ratioMtoPX);
-        basketballHeight = (short) (2 * ratioMtoPX);
+    public void applyForce(float forceX, float forceY) {
+        x += forceX;
+        y += forceY;
+    }
 
-        initialX = updatedX + basketballWidth / 2f;
-        initialY = updatedY + basketballHeight / 2f;
+    public boolean isTouched(float x, float y) {
+        return x > this.x && x < this.x + basketballBitmap.getWidth()
+                && y > this.y && y < this.y + basketballBitmap.getHeight();
+    }
 
-        originalX = initialX;
-        originalY = initialY;
+    public void launch(float startX, float startY, float endX, float endY) {
+        if (!isLaunched) {
+            // Log touch coordinates
+            Log.d("Launch", "StartX: " + startX + ", StartY: " + startY + ", EndX: " + endX + ", EndY: " + endY);
 
-        basketballBitmap = BitmapFactory.decodeResource(res, R.drawable.basketball);
-        basketballBitmap = Bitmap.createScaledBitmap(basketballBitmap, basketballWidth, basketballHeight, false);
+            // Calculate the velocity components based on the touch release point
+            float distanceX = endX - startX;
+            float distanceY = endY - startY;
+            float distance = (float) Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
-        GRAVITY = 9.8f * 6.3f * ratioMtoPX;
-        MAX_VELOCITY = 21 * 1.4f * ratioMtoPX;
-        time = 0;
+            // Calculate velocity components
+            velocityX = (distanceX / distance) * speed;
+            velocityY = (distanceY / distance) * speed;
 
-        howManyCols = 0;
-        floorHitCount = 0;
-        removeBall_time = 0;
+            // Log velocity components
+            Log.d("Launch", "VelocityX: " + velocityX + ", VelocityY: " + velocityY);
 
-        collision = 0;
-        percentOfPull = 0;
+            isLaunched = true;
+        }
+    }
 
-        dotArrayListX = new ArrayList<>();
-        dotArrayListY = new ArrayList<>();
 
+    public boolean isLaunched() {
+        return isLaunched;
     }
 }
+
+
