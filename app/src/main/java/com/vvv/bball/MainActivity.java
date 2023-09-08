@@ -6,6 +6,8 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
+    private GameView gameView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,9 +19,20 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        setContentView(new GameView(this));
-
-        //gameView = findViewById(R.id.gameView);
-
+        gameView = new GameView(this);
+        setContentView(gameView);
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        gameView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        gameView.resume();
+    }
+
 }

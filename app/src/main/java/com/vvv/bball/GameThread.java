@@ -1,50 +1,67 @@
 package com.vvv.bball;
 
+import android.graphics.Canvas;
+import android.view.SurfaceHolder;
+
 public class GameThread extends Thread {
-    private static final long FRAME_RATE = 16;
-
+    public static Canvas canvas;
     private final GameView gameView;
-    private boolean isRunning = false;
+    private final SurfaceHolder surfaceHolder;
+    private boolean running;
 
-    public GameThread(GameView gameView) {
+    public GameThread(SurfaceHolder surfaceHolder, GameView gameView) {
+        super();
+        this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     @Override
     public void run() {
-        while (isRunning) {
-            long startTime = System.currentTimeMillis();
+        long startTime;
+        long timeMillis;
+        long waitTime;
+        long targetTime = 1000 / 60;
 
-            synchronized (gameView.getHolder()) {
-                gameView.update();
-                gameView.render();
-                gameView.invalidate();
-            }
+        while (running) {
+            startTime = System.nanoTime();
+            canvas = null;
 
-            long endTime = System.currentTimeMillis();
-            long frameTime = endTime - startTime;
-
-            if (frameTime < FRAME_RATE) {
-                try {
-                    Thread.sleep(FRAME_RATE - frameTime);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            try {
+                canvas = this.surfaceHolder.lockCanvas();
+                synchronized (surfaceHolder) {
+                    gameView.update();
+                    gameView.draw(canvas);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (canvas != null) {
+                    try {
+                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }
-    }
 
-    public void startThread() {
-        isRunning = true;
-        start();
-    }
+            timeMillis = (System.nanoTime() - startTime) / 1000000;
+            waitTime = targetTime - timeMillis;
 
-    public void stopThread() {
-        isRunning = false;
-        try {
-            join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                if (waitTime > 0) {
+                    sleep(waitTime);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

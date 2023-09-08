@@ -4,17 +4,17 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
 public abstract class GameObject {
-    protected Bitmap bitmap;
     protected float x, y;
+    protected Bitmap image;
 
-    public GameObject(Bitmap bitmap, float x, float y) {
-        this.bitmap = bitmap;
+    public GameObject(float x, float y, Bitmap image) {
         this.x = x;
         this.y = y;
+        this.image = image;
     }
 
-    public abstract void draw(Canvas canvas);
-
     public abstract void update();
+
+    public abstract void draw(Canvas canvas);
 }
 

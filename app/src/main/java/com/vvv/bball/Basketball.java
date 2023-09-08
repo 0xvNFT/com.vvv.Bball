@@ -1,71 +1,86 @@
 package com.vvv.bball;
 
-import android.content.res.Resources;
+import static com.vvv.bball.Constants.DAMPING_FACTOR;
+import static com.vvv.bball.Constants.THROW_POWER_MULTIPLIER;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.util.Log;
 
 public class Basketball extends GameObject {
-    protected final Bitmap basketballBitmap;
-    private final int speed;
-    private float velocityX, velocityY;
-    private boolean isThrow = false;
+    private final float gravity;
+    private final int screenHeight, screenWidth;
+    private float velX, velY;
+    private boolean isThrown;
 
-    public Basketball(Bitmap basketballBitmap, int speed) {
-        super(basketballBitmap, 0, 0);
-        this.basketballBitmap = basketballBitmap;
-        this.speed = speed;
-
-        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-        int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
-
-        int basketballWidth = basketballBitmap.getWidth();
-        int basketballHeight = basketballBitmap.getHeight();
-
-        x = (screenWidth - basketballWidth) / 2.0f;
-        y = screenHeight - basketballHeight - 50;
+    public Basketball(float x, float y, Bitmap image, int screenHeight, int screenWidth) {
+        super(x, y, image);
+        velX = 0;
+        velY = 0;
+        gravity = 1;
+        this.screenHeight = screenHeight / 4;
+        this.screenWidth = screenWidth * 3 / 4;
     }
 
-    @Override
-    public void draw(Canvas canvas) {
-        if (basketballBitmap != null) {
-            canvas.drawBitmap(basketballBitmap, x, y, null);
-        }
+    public void setVelocity(float velocityX, float velocityY) {
+        velX = velocityX * THROW_POWER_MULTIPLIER;
+        velY = velocityY * THROW_POWER_MULTIPLIER;
     }
 
-    @Override
     public void update() {
-        if (isThrow) {
-            x += velocityX;
-            y += velocityY;
+        x += velX;
+        y += velY;
+
+        if (x < 0 || x + image.getWidth() > screenWidth) {
+            velX = -velX * DAMPING_FACTOR;
         }
+
+        if (y < 0) {
+            velY = -velY * DAMPING_FACTOR;
+        }
+
+        if (y + image.getHeight() > screenHeight) {
+            velY = -Math.abs(velY) * DAMPING_FACTOR;
+            y = screenHeight - image.getHeight();
+        }
+
+        velY += gravity;
     }
 
-    public boolean isTouched(float x, float y) {
-        return x > this.x && x < this.x + basketballBitmap.getWidth()
-                && y > this.y && y < this.y + basketballBitmap.getHeight();
+    public void draw(Canvas canvas) {
+        canvas.drawBitmap(image, x, y, null);
     }
 
-    public void isThrown(float startX, float startY, float endX, float endY) {
-        if (!isThrow) {
-            // Log touch coordinates
-            Log.d("Launch", "StartX: " + startX + ", StartY: " + startY + ", EndX: " + endX + ", EndY: " + endY);
+    public void throwBall(float velX, float velY) {
+        this.velX = velX;
+        this.velY = velY;
+        isThrown = true;
+    }
 
-            // Calculate the velocity components based on the touch release point
-            float distanceX = endX - startX;
-            float distanceY = endY - startY;
-            float distance = (float) Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+    public void reset() {
+        x = 0;
+        y = screenHeight - image.getHeight();
+        velX = 0;
+        velY = 0;
+        isThrown = false;
+    }
 
-            // Calculate velocity components
-            velocityX = (distanceX / distance) * speed;
-            velocityY = (distanceY / distance) * speed;
+    public float getX() {
+        return x;
+    }
 
-            // Log velocity components
-            Log.d("Launch", "VelocityX: " + velocityX + ", VelocityY: " + velocityY);
+    public float getY() {
+        return y;
+    }
 
-            isThrow = true;
-        }
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public boolean isThrown() {
+        return isThrown;
+    }
+
+    public int getVelocityY() {
+        return (int) velY;
     }
 }
-
-

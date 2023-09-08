@@ -1,5 +1,8 @@
 package com.vvv.bball;
 
+import static com.vvv.bball.Constants.THROW_POWER_MULTIPLIER;
+
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -15,108 +19,47 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
-    private final SurfaceHolder surfaceHolder;
-    private final boolean isRunning = false;
-    private Basketball basketball;
-    private BasketballRing basketballRing;
-    private Bitmap gameBackground;
-    private float scaleX, scaleY;
     private GameThread gameThread;
-    private boolean isBasketballTouched = false;
-    private float touchX, touchY;
-    private float throwStartX, throwStartY;
+    private final int screenWidth, screenHeight;
+    private Background background;
+    private Basketball basketball;
+    private Hoop hoop;
+    private boolean touchingBall;
+    private float touchStartX;
+    private float touchStartY;
+    private float touchEndX;
+    private float touchEndY;
 
     public GameView(Context context) {
         super(context);
-        surfaceHolder = getHolder();
-        surfaceHolder.addCallback(this);
+        getHolder().addCallback(this);
+        gameThread = new GameThread(getHolder(), this);
+        setFocusable(true);
 
-        initializeResources(context);
-
-    }
-
-    private void initializeResources(Context context) {
-        gameBackground = BitmapFactory.decodeResource(context.getResources(), R.drawable.game_bg);
-        basketball = new Basketball(BitmapFactory.decodeResource(getResources(), R.drawable.basketball), 10);
-        basketballRing = new BasketballRing(BitmapFactory.decodeResource(getResources(), R.drawable.basketball_ring), 10);
-    }
-
-    public void render() {
-        Canvas canvas = surfaceHolder.lockCanvas();
-        if (canvas != null) {
-            if (gameBackground != null) {
-                scaleX = (float) canvas.getWidth() / gameBackground.getWidth();
-                scaleY = (float) canvas.getHeight() / gameBackground.getHeight();
-
-                Bitmap scaledBackground = Bitmap.createScaledBitmap(gameBackground, canvas.getWidth(), canvas.getHeight(), true);
-
-                canvas.drawBitmap(scaledBackground, scaleX, scaleY, null);
-
-            }
-            if (basketballRing != null) {
-                basketballRing.draw(canvas);
-            }
-
-            if (isBasketballTouched) {
-
-                Paint pathPaint = new Paint();
-                pathPaint.setColor(Color.WHITE);
-                pathPaint.setStyle(Paint.Style.STROKE);
-                pathPaint.setStrokeWidth(2);
-                pathPaint.setPathEffect(new DashPathEffect(new float[]{10, 10}, 0));
-
-                Path trajectoryPath = new Path();
-                trajectoryPath.moveTo(throwStartX, throwStartY);
-
-                trajectoryPath.lineTo(touchX, touchY);
-
-                canvas.drawPath(trajectoryPath, pathPaint);
-            }
-
-            if (basketball != null) {
-                basketball.draw(canvas);
-            }
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-        }
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        screenWidth = displayMetrics.widthPixels;
+        screenHeight = displayMetrics.heightPixels;
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+        Bitmap backgroundImg = BitmapFactory.decodeResource(getResources(), R.drawable.game_bg);
+        Bitmap basketballImg = BitmapFactory.decodeResource(getResources(), R.drawable.basketball);
+        Bitmap hoopImg = BitmapFactory.decodeResource(getResources(), R.drawable.hoop);
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                if (basketball.isTouched(x, y)) {
-                    isBasketballTouched = true;
-                    touchX = x;
-                    touchY = y;
-                    throwStartX = x;
-                    throwStartY = y;
-                }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                if (isBasketballTouched) {
-                    touchX = x;
-                    touchY = y;
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-                isBasketballTouched = false;
-                basketball.isThrown(throwStartX, throwStartY, x, y);
+        background = new Background(0, 0, backgroundImg);
 
-                break;
+        float basketballX = (float) (getWidth() - basketballImg.getWidth()) / 2;
+        float basketballY = (getHeight() - basketballImg.getHeight() - 50);
+        basketball = new Basketball(basketballX, basketballY, basketballImg, getHeight(), getWidth());
+
+        hoop = new Hoop(400, 100, hoopImg, 10, getWidth());
+
+        if (!gameThread.isRunning()) {
+            gameThread.setRunning(true);
+            gameThread.start();
         }
-
-        return true;
-    }
-
-
-    @Override
-    public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-        gameThread = new GameThread(this);
-        gameThread.startThread();
     }
 
     @Override
@@ -126,13 +69,111 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-        if (gameThread != null) {
-            gameThread.stopThread();
+        boolean retry = true;
+        gameThread.setRunning(false);
+        while (retry) {
+            try {
+                gameThread.join();
+                retry = false;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+        if (canvas != null) {
+            background.draw(canvas);
+            basketball.draw(canvas);
+            drawTrajectory(canvas);
+            checkBallStopped();
+            hoop.draw(canvas);
         }
     }
 
     public void update() {
+        if (background != null) {
+            background.update();
+        }
         basketball.update();
-        basketballRing.update();
+        hoop.update();
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                float touchX = event.getX();
+                float touchY = event.getY();
+
+                // Check if the touch is within the basketball bounds
+                if (touchX >= basketball.getX() && touchX <= basketball.getX() + basketball.getImage().getWidth() &&
+                        touchY >= basketball.getY() && touchY <= basketball.getY() + basketball.getImage().getHeight()) {
+                    touchingBall = true;
+                    touchStartX = touchX;
+                    touchStartY = touchY;
+                }
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                if (touchingBall) {
+                    touchEndX = event.getX();
+                    touchEndY = event.getY();
+                }
+                break;
+
+            case MotionEvent.ACTION_UP:
+                if (touchingBall) {
+                    touchingBall = false;
+
+                    float velocityX = (touchStartX - touchEndX) * THROW_POWER_MULTIPLIER;
+                    float velocityY = (touchStartY - touchEndY) * THROW_POWER_MULTIPLIER;
+                    basketball.throwBall(velocityX, velocityY);
+                }
+                break;
+        }
+
+        return true;
+    }
+
+    private void drawTrajectory(Canvas canvas) {
+        if (touchingBall) {
+            // Set the paint for the trajectory
+            Paint trajectoryPaint = new Paint();
+            trajectoryPaint.setColor(Color.WHITE);
+            trajectoryPaint.setStyle(Paint.Style.STROKE);
+            trajectoryPaint.setStrokeWidth(5);
+            trajectoryPaint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
+
+            // Draw the trajectory path
+            Path trajectoryPath = new Path();
+            trajectoryPath.moveTo(touchStartX, touchStartY);
+            trajectoryPath.lineTo(touchEndX, touchEndY);
+            canvas.drawPath(trajectoryPath, trajectoryPaint);
+        }
+    }
+
+    private void checkBallStopped() {
+        if (basketball.isThrown() && Math.abs(basketball.getVelocityY()) < 1 && basketball.getY() > screenHeight * 3 / 4) {
+            basketball.reset();
+        }
+    }
+
+    public void pause() {
+        gameThread.setRunning(false);
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void resume() {
+        gameThread = new GameThread(getHolder(), this);
+        gameThread.setRunning(true);
+        gameThread.start();
+    }
+
 }
