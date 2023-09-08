@@ -45,6 +45,17 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         this.screenW = width;
         this.screenH = height;
         this.background.setScreenSize(screenW, screenH);
+
+        float hoopX = screenW - hoop.getWidth() - 10;
+        float hoopY = 300;
+
+        hoop.setPosition(hoopX, hoopY);
+
+        float basketballX = 100;
+        float basketballY = screenH - basketball.getHeight() - 300;
+
+        basketball.setX(basketballX);
+        basketball.setY(basketballY);
     }
 
     @Override

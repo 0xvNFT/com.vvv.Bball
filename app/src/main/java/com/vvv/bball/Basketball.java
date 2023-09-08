@@ -36,5 +36,12 @@ public class Basketball implements GameObject {
         this.y = y;
     }
 
+    public int getWidth() {
+        return bitmap.getWidth();
+    }
+
+    public int getHeight() {
+        return bitmap.getHeight();
+    }
 
 }

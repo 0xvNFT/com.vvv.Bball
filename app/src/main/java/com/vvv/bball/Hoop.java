@@ -15,6 +15,11 @@ public class Hoop implements GameObject {
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.hoop);
     }
 
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
+
     @Override
     public void draw(Canvas canvas) {
         canvas.drawBitmap(bitmap, x, y, null);
@@ -36,5 +41,11 @@ public class Hoop implements GameObject {
         this.y = y;
     }
 
+    public int getWidth() {
+        return bitmap.getWidth();
+    }
 
+    public int getHeight() {
+        return bitmap.getHeight();
+    }
 }
