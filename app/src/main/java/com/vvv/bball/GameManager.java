@@ -25,12 +25,20 @@ public class GameManager {
     }
 
     public void checkForScoring() {
-        // Placeholder: Replace with real collision detection
-        if (basketball.getX() > hoop.getX() && basketball.getX() < hoop.getX() + 50 &&
-                basketball.getY() > hoop.getY() && basketball.getY() < hoop.getY() + 50) {
+        // More accurate collision logic
+        float ballCenterX = basketball.getX() + (float) basketball.getWidth() / 2;
+        float ballCenterY = basketball.getY() + (float) basketball.getHeight() / 2;
+
+        float hoopCenterX = hoop.getX() + (float) hoop.getWidth() / 2;
+        float hoopCenterY = hoop.getY() + (float) hoop.getHeight() / 2;
+
+        float distance = (float) Math.sqrt(Math.pow(ballCenterX - hoopCenterX, 2) + Math.pow(ballCenterY - hoopCenterY, 2));
+
+        if (distance < (float) basketball.getWidth() / 2 + (float) hoop.getWidth() / 2) {
             score++;
         }
     }
+
 
     public void draw(Canvas canvas) {
         basketball.draw(canvas);

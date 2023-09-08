@@ -28,7 +28,10 @@ public class Basketball implements GameObject {
 
     @Override
     public void onTouchEvent(MotionEvent event) {
-
+        if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+            this.x = event.getX() - (float) this.getWidth() / 2;
+            this.y = event.getY() - (float) this.getHeight() / 2;
+        }
     }
 
     public float getX() {

@@ -2,6 +2,7 @@ package com.vvv.bball;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -70,6 +71,12 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         background.draw(canvas);
         basketball.draw(canvas);
         hoop.draw(canvas);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        basketball.onTouchEvent(event);
+        return true;
     }
 
     public GameLoopThread getGameLoopThread() {
