@@ -1,86 +1,40 @@
 package com.vvv.bball;
 
-import static com.vvv.bball.Constants.DAMPING_FACTOR;
-import static com.vvv.bball.Constants.THROW_POWER_MULTIPLIER;
-
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
-public class Basketball extends GameObject {
-    private final float gravity;
-    private final int screenHeight, screenWidth;
-    private float velX, velY;
-    private boolean isThrown;
+public class Basketball implements GameObject {
+    private float x, y;
+    private final Bitmap bitmap;
 
-    public Basketball(float x, float y, Bitmap image, int screenHeight, int screenWidth) {
-        super(x, y, image);
-        velX = 0;
-        velY = 0;
-        gravity = 1;
-        this.screenHeight = screenHeight / 4;
-        this.screenWidth = screenWidth * 3 / 4;
+    public Basketball(Context context, float x, float y) {
+        this.x = x;
+        this.y = y;
+        bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.basketball);
     }
 
-    public void setVelocity(float velocityX, float velocityY) {
-        velX = velocityX * THROW_POWER_MULTIPLIER;
-        velY = velocityY * THROW_POWER_MULTIPLIER;
-    }
-
-    public void update() {
-        x += velX;
-        y += velY;
-
-        if (x < 0 || x + image.getWidth() > screenWidth) {
-            velX = -velX * DAMPING_FACTOR;
-        }
-
-        if (y < 0) {
-            velY = -velY * DAMPING_FACTOR;
-        }
-
-        if (y + image.getHeight() > screenHeight) {
-            velY = -Math.abs(velY) * DAMPING_FACTOR;
-            y = screenHeight - image.getHeight();
-        }
-
-        velY += gravity;
-    }
-
+    @Override
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(image, x, y, null);
-    }
-
-    public void throwBall(float velX, float velY) {
-        this.velX = velX;
-        this.velY = velY;
-        isThrown = true;
-    }
-
-    public void reset() {
-        x = 0;
-        y = screenHeight - image.getHeight();
-        velX = 0;
-        velY = 0;
-        isThrown = false;
+        canvas.drawBitmap(bitmap, x, y, null);
     }
 
     public float getX() {
         return x;
     }
 
+    public void setX(float x) {
+        this.x = x;
+    }
+
     public float getY() {
         return y;
     }
 
-    public Bitmap getImage() {
-        return image;
+    public void setY(float y) {
+        this.y = y;
     }
 
-    public boolean isThrown() {
-        return isThrown;
-    }
 
-    public int getVelocityY() {
-        return (int) velY;
-    }
 }

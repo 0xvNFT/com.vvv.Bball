@@ -1,34 +1,40 @@
 package com.vvv.bball;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
-public class Hoop extends GameObject {
+public class Hoop implements GameObject {
+    private float x, y;
+    private final Bitmap bitmap;
 
-    private float speedX;
-    private final int screenWidth;
-    private int screenHeight;
-
-    public Hoop(float x, float y, Bitmap image, float speedX, int screenWidth) {
-        super(x, y, image);
-        this.speedX = speedX;
-        this.screenWidth = screenWidth;
+    public Hoop(Context context, float x, float y) {
+        this.x = x;
+        this.y = y;
+        bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.hoop);
     }
 
-    public void update() {
-        x += speedX;
-
-        if (x < 0 || x > screenWidth - image.getWidth()) {
-            speedX = -speedX;
-        }
-    }
-
-    public int getWidth() {
-        return image.getWidth();
-    }
-
+    @Override
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(image, x, y, null);
+        canvas.drawBitmap(bitmap, x, y, null);
     }
+
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
 
 }
