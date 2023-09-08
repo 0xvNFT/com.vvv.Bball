@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.view.MotionEvent;
 
 public class Background implements GameObject {
     private Bitmap bitmap;
@@ -24,5 +25,15 @@ public class Background implements GameObject {
         if (canvas != null && bitmap != null) {
             canvas.drawBitmap(bitmap, 0, 0, null);
         }
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void onTouchEvent(MotionEvent event) {
+
     }
 }

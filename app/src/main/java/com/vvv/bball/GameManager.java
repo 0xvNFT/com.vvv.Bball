@@ -15,12 +15,11 @@ public class GameManager {
     }
 
     public void update() {
-        // Code to move basketball, check for scoring etc.
-        // For now, let's just simulate a simple shooting behavior.
-        // You would replace this with real logic based on touch events or physics.
 
-        basketball.setX(basketball.getX() + 1);  // Simple horizontal movement
-        basketball.setY(basketball.getY() - 1);  // Simple upward movement
+        basketball.update();
+        hoop.update();
+//        basketball.setX(basketball.getX() + 1);
+//        basketball.setY(basketball.getY() - 1);
 
         checkForScoring();
     }

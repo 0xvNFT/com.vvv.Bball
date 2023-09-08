@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.view.MotionEvent;
 
 public class Basketball implements GameObject {
     private float x, y;
@@ -18,6 +19,16 @@ public class Basketball implements GameObject {
     @Override
     public void draw(Canvas canvas) {
         canvas.drawBitmap(bitmap, x, y, null);
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void onTouchEvent(MotionEvent event) {
+
     }
 
     public float getX() {

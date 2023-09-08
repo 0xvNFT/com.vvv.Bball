@@ -30,12 +30,20 @@ public class GameLoopThread extends Thread {
     }
     @Override
     public void run() {
+        long startTime;
+        long timeMillis;
+        long waitTime;
+        long targetTime = 1000 / 60;
+
         while (running) {
             Canvas canvas = null;
+            startTime = System.nanoTime();
+
             try {
                 if (surfaceHolder.getSurface().isValid()) {
                     canvas = this.surfaceHolder.lockCanvas();
                 }
+
                 synchronized (surfaceHolder) {
                     if (canvas != null) {
                         gameManager.update();
@@ -47,8 +55,19 @@ public class GameLoopThread extends Thread {
                     this.surfaceHolder.unlockCanvasAndPost(canvas);
                 }
             }
+
+            timeMillis = (System.nanoTime() - startTime) / 1000000;
+            waitTime = targetTime - timeMillis;
+
+            try {
+                if (waitTime > 0) {
+                    sleep(waitTime);
+                }
+            } catch (InterruptedException e) {
+            }
         }
     }
+
 
     public void pauseGame() {
         this.running = false;
