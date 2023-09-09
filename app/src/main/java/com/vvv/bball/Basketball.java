@@ -14,7 +14,9 @@ public class Basketball implements GameObject {
     private final int screenWidth;
     private final int screenHeight;
     private final float gravity = 3f;
-    private final float energyLoss = 0.7f;
+    private final float energyLoss = 0.5f;
+    private final float velocityThreshold = 0.5f;
+
 
     public Basketball(Context context, int screenWidth, int screenHeight) {
         this.screenWidth = screenWidth;
@@ -49,6 +51,16 @@ public class Basketball implements GameObject {
         if (y + radius >= screenHeight) {
             y = screenHeight - radius;
             velocityY = -velocityY * energyLoss;
+        }
+
+        if (Math.abs(velocityY) < velocityThreshold && y + radius >= screenHeight) {
+            // Set the ball to its initial position
+            this.x = radius;
+            this.y = screenHeight - radius;
+
+            // Reset velocities
+            this.velocityX = 0;
+            this.velocityY = 0;
         }
     }
 

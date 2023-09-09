@@ -22,6 +22,9 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private int score;
     private float initialTouchX, initialTouchY;
     private final Paint paint = new Paint();
+    private boolean hasScored = false;
+
+
     public GameSurface(Context context) {
         super(context);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
@@ -98,6 +101,15 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         basketball.update();
         hoop.update();
         checkForScoring();
+
+        if (CollisionDetector.checkCollision(basketball, hoop)) {
+            if (!hasScored) {
+                score++;
+                hasScored = true;
+            }
+        } else {
+            hasScored = false;
+        }
     }
 
     public void checkForScoring() {
@@ -122,8 +134,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 initialTouchY = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                float dx = event.getX() - initialTouchX;
-                float dy = event.getY() - initialTouchY;
+                float dx = (event.getX() - initialTouchX) / 8;
+                float dy = (event.getY() - initialTouchY) / 8;
                 basketball.setVelocity(dx, dy);
                 break;
         }
