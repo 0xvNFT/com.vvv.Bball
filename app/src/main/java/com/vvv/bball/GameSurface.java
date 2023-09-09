@@ -2,6 +2,10 @@ package com.vvv.bball;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -10,22 +14,29 @@ import androidx.annotation.NonNull;
 
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoopThread gameLoopThread;
-    private final GameManager gameManager;
-
     private final Basketball basketball;
     private final Hoop hoop;
     private final Background background;
     private int screenW;
     private int screenH;
-
+    private int score;
+    private float initialTouchX, initialTouchY;
+    private final Paint paint = new Paint();
     public GameSurface(Context context) {
         super(context);
-        gameManager = new GameManager(context);
-        getHolder().addCallback(this);
-        gameLoopThread = new GameLoopThread(getHolder(), this, gameManager);
-        basketball = new Basketball(context, 50, 50);
-        hoop = new Hoop(context, 200, 100);
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        screenW = metrics.widthPixels;
+        screenH = metrics.heightPixels;
+
+        gameLoopThread = new GameLoopThread(getHolder(), this);
+
+        basketball = new Basketball(context, screenW, screenH);
+        hoop = new Hoop(context, screenW, screenH);
+
         background = new Background(context);
+
+        score = 0;
+        getHolder().addCallback(this);
     }
 
     @Override
@@ -34,12 +45,11 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
             gameLoopThread.setRunning(true);
             gameLoopThread.start();
         } else if (gameLoopThread.getState() == Thread.State.TERMINATED) {
-            gameLoopThread = new GameLoopThread(holder, this, gameManager);
+            gameLoopThread = new GameLoopThread(holder, this);
             gameLoopThread.setRunning(true);
             gameLoopThread.start();
         }
     }
-
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
@@ -71,14 +81,58 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         background.draw(canvas);
         basketball.draw(canvas);
         hoop.draw(canvas);
+        debugDraw(canvas);
     }
 
-    @Override
+    private void debugDraw(Canvas canvas) {
+        paint.setColor(Color.RED);
+        canvas.drawLine(0, 0, screenW, 0, paint); // Top edge
+        canvas.drawLine(screenW, 0, screenW, screenH, paint); // Right edge
+        canvas.drawLine(0, screenH, screenW, screenH, paint); // Bottom edge
+        canvas.drawLine(0, 0, 0, screenH, paint); // Left edge
+        Log.d("ScreenDimensions", "Width: " + screenW + ", Height: " + screenH);
+
+    }
+
+    public void update() {
+        basketball.update();
+        hoop.update();
+        checkForScoring();
+    }
+
+    public void checkForScoring() {
+        // More accurate collision logic
+        float ballCenterX = basketball.getX() + (float) basketball.getWidth() / 2;
+        float ballCenterY = basketball.getY() + (float) basketball.getHeight() / 2;
+
+        float hoopCenterX = hoop.getX() + (float) hoop.getWidth() / 2;
+        float hoopCenterY = hoop.getY() + (float) hoop.getHeight() / 2;
+
+        float distance = (float) Math.sqrt(Math.pow(ballCenterX - hoopCenterX, 2) + Math.pow(ballCenterY - hoopCenterY, 2));
+
+        if (distance < (float) basketball.getWidth() / 2 + (float) hoop.getWidth() / 2) {
+            score++;
+        }
+    }
+
     public boolean onTouchEvent(MotionEvent event) {
-        basketball.onTouchEvent(event);
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                initialTouchX = event.getX();
+                initialTouchY = event.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                float dx = event.getX() - initialTouchX;
+                float dy = event.getY() - initialTouchY;
+                basketball.setVelocity(dx, dy);
+                break;
+        }
         return true;
     }
 
+    public int getScore() {
+        return score;
+    }
     public GameLoopThread getGameLoopThread() {
         return gameLoopThread;
     }

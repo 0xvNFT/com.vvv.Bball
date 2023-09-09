@@ -6,13 +6,11 @@ import android.view.SurfaceHolder;
 public class GameLoopThread extends Thread {
     private final GameSurface gameSurface;
     private final SurfaceHolder surfaceHolder;
-    private final GameManager gameManager;
     private boolean running = false;
 
-    public GameLoopThread(SurfaceHolder surfaceHolder, GameSurface gameSurface, GameManager gameManager) {
+    public GameLoopThread(SurfaceHolder surfaceHolder, GameSurface gameSurface) {
         this.surfaceHolder = surfaceHolder;
         this.gameSurface = gameSurface;
-        this.gameManager = gameManager;
 
     }
 
@@ -46,7 +44,7 @@ public class GameLoopThread extends Thread {
 
                 synchronized (surfaceHolder) {
                     if (canvas != null) {
-                        gameManager.update();
+                        gameSurface.update();
                         this.gameSurface.draw(canvas);
                     }
                 }

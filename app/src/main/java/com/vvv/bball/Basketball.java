@@ -9,10 +9,19 @@ import android.view.MotionEvent;
 public class Basketball implements GameObject {
     private float x, y;
     private final Bitmap bitmap;
+    private float velocityX, velocityY;
+    private final float radius;
+    private final int screenWidth;
+    private final int screenHeight;
+    private final float gravity = 3f;
+    private final float energyLoss = 0.7f;
 
-    public Basketball(Context context, float x, float y) {
-        this.x = x;
-        this.y = y;
+    public Basketball(Context context, int screenWidth, int screenHeight) {
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
+        this.radius = 50;
+        this.x = radius;
+        this.y = screenHeight - radius;
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.basketball);
     }
 
@@ -23,9 +32,30 @@ public class Basketball implements GameObject {
 
     @Override
     public void update() {
+        velocityY += gravity;
+        x += velocityX;
+        y += velocityY;
 
+// Bounce off walls and floor
+        if (x - radius <= 0 || x + radius >= screenWidth) {
+            velocityX = -velocityX * energyLoss;
+        }
+
+        if (y - radius <= 0) {  // New condition for the top edge
+            y = radius;
+            velocityY = -velocityY * energyLoss;
+        }
+
+        if (y + radius >= screenHeight) {
+            y = screenHeight - radius;
+            velocityY = -velocityY * energyLoss;
+        }
     }
 
+    public void setVelocity(float velocityX, float velocityY) {
+        this.velocityX = velocityX;
+        this.velocityY = velocityY;
+    }
     @Override
     public void onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -50,6 +80,9 @@ public class Basketball implements GameObject {
         this.y = y;
     }
 
+    public float getRadius() {
+        return radius;
+    }
     public int getWidth() {
         return bitmap.getWidth();
     }
