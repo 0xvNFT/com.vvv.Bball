@@ -36,4 +36,8 @@ public class Background implements GameObject {
     public void onTouchEvent(MotionEvent event) {
 
     }
+
+    public void recycle() {
+        this.bitmap.recycle();
+    }
 }

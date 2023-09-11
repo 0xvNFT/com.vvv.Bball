@@ -15,14 +15,15 @@ import androidx.annotation.NonNull;
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoopThread gameLoopThread;
     private final Basketball basketball;
+    private final Paint scorePaint = new Paint();
     private final Hoop hoop;
-    private final Background background;
     private int screenW;
     private int screenH;
     private int score;
     private float initialTouchX, initialTouchY;
     private final Paint paint = new Paint();
     private boolean hasScored = false;
+    private final Background background;
 
 
     public GameSurface(Context context) {
@@ -38,6 +39,9 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
         background = new Background(context);
 
+        scorePaint.setColor(Color.WHITE);
+        scorePaint.setTextSize(50);
+        scorePaint.setTextAlign(Paint.Align.LEFT);
         score = 0;
         getHolder().addCallback(this);
     }
@@ -75,6 +79,15 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         gameLoopThread.terminate();
+        if (basketball != null) {
+            basketball.recycle();
+        }
+        if (hoop != null) {
+            hoop.recycle();
+        }
+        if (background != null) {
+            background.recycle();
+        }
 
     }
 
@@ -85,6 +98,8 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         basketball.draw(canvas);
         hoop.draw(canvas);
         debugDraw(canvas);
+        canvas.drawText("Score: " + score, 10, 50, scorePaint);
+
     }
 
     private void debugDraw(Canvas canvas) {
@@ -100,7 +115,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     public void update() {
         basketball.update();
         hoop.update();
-        checkForScoring();
+        //checkForScoring();
 
         if (CollisionDetector.checkCollision(basketball, hoop)) {
             if (!hasScored) {

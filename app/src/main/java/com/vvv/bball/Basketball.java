@@ -16,6 +16,7 @@ public class Basketball implements GameObject {
     private final float gravity = 3f;
     private final float energyLoss = 0.5f;
     private final float velocityThreshold = 0.5f;
+    private int groundHits = 0;
 
 
     public Basketball(Context context, int screenWidth, int screenHeight) {
@@ -25,6 +26,8 @@ public class Basketball implements GameObject {
         this.x = radius;
         this.y = screenHeight - radius;
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.basketball);
+        groundHits = 0;
+
     }
 
     @Override
@@ -35,10 +38,22 @@ public class Basketball implements GameObject {
     @Override
     public void update() {
         velocityY += gravity;
-        x += velocityX;
         y += velocityY;
 
-// Bounce off walls and floor
+        if (y + radius >= screenHeight) {
+            y = screenHeight - radius;
+            velocityY = -velocityY * energyLoss;
+            groundHits++; // Increment ground hit counter
+        }
+
+        // Separate condition for stopping x-axis movement when on ground
+        if (y + radius >= screenHeight && Math.abs(velocityY) < velocityThreshold) {
+            velocityX = 0;  // Stop x movement when on the ground
+        } else {
+            x += velocityX; // Otherwise, update x
+        }
+
+        // Bounce off walls
         if (x - radius <= 0 || x + radius >= screenWidth) {
             velocityX = -velocityX * energyLoss;
         }
@@ -48,22 +63,19 @@ public class Basketball implements GameObject {
             velocityY = -velocityY * energyLoss;
         }
 
-        if (y + radius >= screenHeight) {
-            y = screenHeight - radius;
-            velocityY = -velocityY * energyLoss;
-        }
-
-        if (Math.abs(velocityY) < velocityThreshold && y + radius >= screenHeight) {
-            // Set the ball to its initial position
+        // Reset ball's position after 3 ground hits
+        if (groundHits >= 3) {
+            // Reset the ball to its initial position
             this.x = radius;
             this.y = screenHeight - radius;
 
             // Reset velocities
             this.velocityX = 0;
             this.velocityY = 0;
+
+            groundHits = 0; // Reset the ground hits counter
         }
     }
-
     public void setVelocity(float velocityX, float velocityY) {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
@@ -103,4 +115,15 @@ public class Basketball implements GameObject {
         return bitmap.getHeight();
     }
 
+    public float getYVelocity() {
+        return velocityY;
+    }
+
+    public float getVelocityX() {
+        return velocityX;
+    }
+
+    public void recycle() {
+        this.bitmap.recycle();
+    }
 }

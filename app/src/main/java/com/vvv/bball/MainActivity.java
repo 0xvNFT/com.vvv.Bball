@@ -37,4 +37,10 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         gameLoopThread.resumeGame();
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        gameLoopThread.terminate();
+    }
 }

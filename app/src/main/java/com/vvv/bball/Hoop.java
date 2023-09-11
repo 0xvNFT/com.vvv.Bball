@@ -59,4 +59,8 @@ public class Hoop implements GameObject {
     public int getHeight() {
         return bitmap.getHeight();
     }
+
+    public void recycle() {
+        this.bitmap.recycle();
+    }
 }
