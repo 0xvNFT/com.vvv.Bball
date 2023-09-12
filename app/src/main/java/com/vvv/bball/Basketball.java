@@ -14,9 +14,13 @@ public class Basketball implements GameObject {
     private final int screenWidth;
     private final int screenHeight;
     private final float gravity = 3f;
-    private final float energyLoss = 0.5f;
+    final float energyLoss = 0.5f;
     private final float velocityThreshold = 0.5f;
     private int groundHits = 0;
+    private final float drag = 0.99f;
+    private final float magnusEffect = 0.02f;
+    private final float angularVelocity = 0.1f;
+    private boolean isBallReset = true;
 
 
     public Basketball(Context context, int screenWidth, int screenHeight) {
@@ -38,47 +42,57 @@ public class Basketball implements GameObject {
     @Override
     public void update() {
         velocityY += gravity;
+        velocityX *= drag;
+        velocityY *= drag;
+        velocityY += magnusEffect * velocityX;
         y += velocityY;
+
+        velocityX += (float) (angularVelocity * Math.sin(velocityY));
 
         if (y + radius >= screenHeight) {
             y = screenHeight - radius;
             velocityY = -velocityY * energyLoss;
-            groundHits++; // Increment ground hit counter
+            groundHits++;
         }
 
-        // Separate condition for stopping x-axis movement when on ground
         if (y + radius >= screenHeight && Math.abs(velocityY) < velocityThreshold) {
-            velocityX = 0;  // Stop x movement when on the ground
+            velocityX = 0;
         } else {
-            x += velocityX; // Otherwise, update x
+            x += velocityX;
         }
 
-        // Bounce off walls
+
         if (x - radius <= 0 || x + radius >= screenWidth) {
             velocityX = -velocityX * energyLoss;
         }
 
-        if (y - radius <= 0) {  // New condition for the top edge
+        if (y - radius <= 0) {
             y = radius;
             velocityY = -velocityY * energyLoss;
         }
 
-        // Reset ball's position after 3 ground hits
+
         if (groundHits >= 3) {
-            // Reset the ball to its initial position
+
             this.x = radius;
             this.y = screenHeight - radius;
 
-            // Reset velocities
             this.velocityX = 0;
             this.velocityY = 0;
 
-            groundHits = 0; // Reset the ground hits counter
+            groundHits = 0;
+            isBallReset = true;
+
         }
+    }
+
+    public boolean isBallReset() {
+        return isBallReset;
     }
     public void setVelocity(float velocityX, float velocityY) {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
+        isBallReset = false;
     }
     @Override
     public void onTouchEvent(MotionEvent event) {

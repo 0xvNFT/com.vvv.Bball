@@ -24,6 +24,11 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private final Paint paint = new Paint();
     private boolean hasScored = false;
     private final Background background;
+    private boolean isAboveHoop = false;
+    private boolean isPassingThroughHoop = false;
+    private boolean isEnteringHoop = false;
+    private final boolean isBallReset = true;
+
 
 
     public GameSurface(Context context) {
@@ -65,7 +70,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         this.background.setScreenSize(screenW, screenH);
 
         float hoopX = screenW - hoop.getWidth() - 10;
-        float hoopY = 300;
+        float hoopY = 500;
 
         hoop.setPosition(hoopX, hoopY);
 
@@ -97,7 +102,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         background.draw(canvas);
         basketball.draw(canvas);
         hoop.draw(canvas);
-        debugDraw(canvas);
+        //debugDraw(canvas);
         canvas.drawText("Score: " + score, 10, 50, scorePaint);
 
     }
@@ -115,50 +120,77 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     public void update() {
         basketball.update();
         hoop.update();
-        //checkForScoring();
+
+        if (CollisionDetector.checkCollisionWithHoopBottom(basketball, hoop)) {
+            basketball.setY(hoop.getY() + hoop.getHeight());
+            basketball.setVelocity(basketball.getVelocityX(), -Math.abs(basketball.getYVelocity()) * basketball.energyLoss);
+        }
+
+        if (CollisionDetector.checkCollisionWithHoopRightSide(basketball, hoop)) {
+            basketball.setVelocity(-Math.abs(basketball.getVelocityX()), basketball.getYVelocity());
+        }
+
+        if (CollisionDetector.checkCollisionWithHoopLeftSide(basketball, hoop)) {
+            basketball.setVelocity(Math.abs(basketball.getVelocityX()), -Math.abs(basketball.getYVelocity()));
+        }
+
+        if (CollisionDetector.checkCollisionWithHoopCorners(basketball, hoop)) {
+            basketball.setX(basketball.getX() - 5);
+            basketball.setY(basketball.getY() - 5);
+            basketball.setVelocity(-basketball.getVelocityX(), -basketball.getYVelocity());
+        }
+
+        if (basketball.getY() + basketball.getRadius() < hoop.getY()) {
+            isAboveHoop = true;
+        }
+
+        if (basketball.getY() > hoop.getY() + hoop.getHeight()) {
+            isPassingThroughHoop = true;
+        }
+        if (basketball.getX() + 2 * basketball.getRadius() >= hoop.getX() + hoop.getWidth()) {
+            basketball.setX(hoop.getX() + hoop.getWidth() - 2 * basketball.getRadius() - 1);
+            basketball.setVelocity(-Math.abs(basketball.getVelocityX()), basketball.getYVelocity());
+        }
 
         if (CollisionDetector.checkCollision(basketball, hoop)) {
-            if (!hasScored) {
-                score++;
-                hasScored = true;
+            if (isAboveHoop) {
+                isEnteringHoop = true;
             }
-        } else {
-            hasScored = false;
+
+            if (isEnteringHoop && isPassingThroughHoop) {
+                if (!hasScored) {
+                    score++;
+                    hasScored = true;
+                }
+            } else {
+                hasScored = false;
+                isEnteringHoop = false;
+            }
         }
-    }
 
-    public void checkForScoring() {
-        // More accurate collision logic
-        float ballCenterX = basketball.getX() + (float) basketball.getWidth() / 2;
-        float ballCenterY = basketball.getY() + (float) basketball.getHeight() / 2;
-
-        float hoopCenterX = hoop.getX() + (float) hoop.getWidth() / 2;
-        float hoopCenterY = hoop.getY() + (float) hoop.getHeight() / 2;
-
-        float distance = (float) Math.sqrt(Math.pow(ballCenterX - hoopCenterX, 2) + Math.pow(ballCenterY - hoopCenterY, 2));
-
-        if (distance < (float) basketball.getWidth() / 2 + (float) hoop.getWidth() / 2) {
-            score++;
+        if (isPassingThroughHoop) {
+            isAboveHoop = false;
+            isPassingThroughHoop = false;
+            isEnteringHoop = false;
         }
     }
 
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                initialTouchX = event.getX();
-                initialTouchY = event.getY();
-                break;
-            case MotionEvent.ACTION_UP:
-                float dx = (event.getX() - initialTouchX) / 8;
-                float dy = (event.getY() - initialTouchY) / 8;
-                basketball.setVelocity(dx, dy);
-                break;
+        if (basketball.isBallReset()) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    initialTouchX = event.getX();
+                    initialTouchY = event.getY();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    float dx = (event.getX() - initialTouchX) / 8;
+                    float dy = (event.getY() - initialTouchY) / 8;
+                    basketball.setVelocity(dx, dy);
+                    break;
+            }
+            return true;
         }
-        return true;
-    }
-
-    public int getScore() {
-        return score;
+        return false;
     }
     public GameLoopThread getGameLoopThread() {
         return gameLoopThread;
