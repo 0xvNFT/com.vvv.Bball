@@ -8,15 +8,12 @@ import android.view.MotionEvent;
 
 public class Background implements GameObject {
     private Bitmap bitmap;
-    private int screenW, screenH;
 
     public Background(Context context) {
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.game_bg);
     }
 
     public void setScreenSize(int screenW, int screenH) {
-        this.screenW = screenW;
-        this.screenH = screenH;
         this.bitmap = Bitmap.createScaledBitmap(this.bitmap, screenW, screenH, false);
     }
 

@@ -29,17 +29,17 @@ public class CollisionDetector {
         return false;
     }
 
-    public static boolean checkCollisionWithHoopTop(Basketball basketball, Hoop hoop) {
-        float ballBottomY = basketball.getY() + 2 * basketball.getRadius();
-
-        if (ballBottomY <= (hoop.getY() + hoop.getHeight()) && ballBottomY >= hoop.getY()) {
-            float ballLeftX = basketball.getX();
-            float ballRightX = basketball.getX() + 2 * basketball.getRadius();
-
-            return ballRightX >= hoop.getX() && ballLeftX <= (hoop.getX() + hoop.getWidth());
-        }
-        return false;
-    }
+//    public static boolean checkCollisionWithHoopTop(Basketball basketball, Hoop hoop) {
+//        float ballBottomY = basketball.getY() + 2 * basketball.getRadius();
+//
+//        if (ballBottomY <= (hoop.getY() + hoop.getHeight()) && ballBottomY >= hoop.getY()) {
+//            float ballLeftX = basketball.getX();
+//            float ballRightX = basketball.getX() + 2 * basketball.getRadius();
+//
+//            return ballRightX >= hoop.getX() && ballLeftX <= (hoop.getX() + hoop.getWidth());
+//        }
+//        return false;
+//    }
 
     public static boolean checkCollisionWithHoopRightSide(Basketball basketball, Hoop hoop) {
         float ballRightX = basketball.getX() + 2 * basketball.getRadius();

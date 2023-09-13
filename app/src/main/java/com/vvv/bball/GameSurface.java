@@ -1,9 +1,14 @@
 package com.vvv.bball;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -11,6 +16,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoopThread gameLoopThread;
@@ -27,12 +35,17 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
     private boolean isAboveHoop = false;
     private boolean isPassingThroughHoop = false;
     private boolean isEnteringHoop = false;
-    private final boolean isBallReset = true;
+    SharedPreferences sharedPreferences;
+    private final CountDownTimer countDownTimer;
+    private long remainingTime = 60;
+    private boolean isTimerStarted = false;
 
 
 
     public GameSurface(Context context) {
         super(context);
+        sharedPreferences = context.getSharedPreferences("GAME_DATA", Context.MODE_PRIVATE);
+
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         screenW = metrics.widthPixels;
         screenH = metrics.heightPixels;
@@ -44,11 +57,45 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
         background = new Background(context);
 
+        countDownTimer = new CountDownTimer(60000, 1000) { // 60000 milliseconds = 1 minute, tick every 1000 milliseconds
+            public void onTick(long millisUntilFinished) {
+                remainingTime = millisUntilFinished / 1000;
+            }
+
+            public void onFinish() {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                Set<String> existingScores = sharedPreferences.getStringSet("all_scores", new HashSet<String>());
+                existingScores.add(String.valueOf(score));
+                editor.putStringSet("all_scores", existingScores);
+
+                editor.apply();
+
+
+                new AlertDialog.Builder(getContext())
+                        .setTitle("Time's Up!")
+                        .setMessage("Your score is: " + score)
+                        .setPositiveButton("Go to Leaderboard", (dialog, which) -> {
+                            Intent intent = new Intent(getContext(), LeaderboardActivity.class);
+                            getContext().startActivity(intent);
+                        })
+                        .setNeutralButton("Next Level", (dialog, which) -> resetGame())
+                        .setCancelable(false)
+                        .show();
+            }
+
+        };
+
         scorePaint.setColor(Color.WHITE);
         scorePaint.setTextSize(50);
         scorePaint.setTextAlign(Paint.Align.LEFT);
         score = 0;
         getHolder().addCallback(this);
+    }
+
+    private void resetGame() {
+        Intent intent = new Intent(getContext(), MainActivity.class);
+        intent.putExtra("newGame", true);
+        getContext().startActivity(intent);
     }
 
     @Override
@@ -103,10 +150,20 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
         basketball.draw(canvas);
         hoop.draw(canvas);
         //debugDraw(canvas);
-        canvas.drawText("Score: " + score, 10, 50, scorePaint);
+
+        int timerX = screenW / 2 - 130;
+        int timerY = 100;
+        int scoreX = screenW / 2 - 130;
+        int scoreY = timerY + 110;
+
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(60);
+        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        canvas.drawText("TIME: " + remainingTime, timerX, timerY, paint);
+        canvas.drawText("SCORE: " + score, scoreX, scoreY, paint);
 
     }
-
     private void debugDraw(Canvas canvas) {
         paint.setColor(Color.RED);
         canvas.drawLine(0, 0, screenW, 0, paint); // Top edge
@@ -136,7 +193,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
         if (CollisionDetector.checkCollisionWithHoopCorners(basketball, hoop)) {
             basketball.setX(basketball.getX() - 5);
-            basketball.setY(basketball.getY() - 5);
+            basketball.setY(basketball.getY() + 5);
             basketball.setVelocity(-basketball.getVelocityX(), -basketball.getYVelocity());
         }
 
@@ -159,7 +216,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
 
             if (isEnteringHoop && isPassingThroughHoop) {
                 if (!hasScored) {
-                    score++;
+                    score += 2;
                     hasScored = true;
                 }
             } else {
@@ -181,6 +238,10 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 case MotionEvent.ACTION_DOWN:
                     initialTouchX = event.getX();
                     initialTouchY = event.getY();
+                    if (!isTimerStarted) {
+                        countDownTimer.start();
+                        isTimerStarted = true;
+                    }
                     break;
                 case MotionEvent.ACTION_UP:
                     float dx = (event.getX() - initialTouchX) / 8;

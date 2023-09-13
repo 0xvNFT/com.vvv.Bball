@@ -13,13 +13,8 @@ public class Basketball implements GameObject {
     private final float radius;
     private final int screenWidth;
     private final int screenHeight;
-    private final float gravity = 3f;
     final float energyLoss = 0.5f;
-    private final float velocityThreshold = 0.5f;
     private int groundHits = 0;
-    private final float drag = 0.99f;
-    private final float magnusEffect = 0.02f;
-    private final float angularVelocity = 0.1f;
     private boolean isBallReset = true;
 
 
@@ -41,12 +36,16 @@ public class Basketball implements GameObject {
 
     @Override
     public void update() {
+        float gravity = 3f;
         velocityY += gravity;
+        float drag = 0.99f;
         velocityX *= drag;
         velocityY *= drag;
+        float magnusEffect = 0.02f;
         velocityY += magnusEffect * velocityX;
         y += velocityY;
 
+        float angularVelocity = 0.1f;
         velocityX += (float) (angularVelocity * Math.sin(velocityY));
 
         if (y + radius >= screenHeight) {
@@ -55,6 +54,7 @@ public class Basketball implements GameObject {
             groundHits++;
         }
 
+        float velocityThreshold = 0.5f;
         if (y + radius >= screenHeight && Math.abs(velocityY) < velocityThreshold) {
             velocityX = 0;
         } else {
