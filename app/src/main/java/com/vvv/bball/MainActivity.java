@@ -1,9 +1,12 @@
 package com.vvv.bball;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,7 +27,23 @@ public class MainActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         GameSurface gameSurface = new GameSurface(this);
-        setContentView(gameSurface);
+        FrameLayout container = new FrameLayout(this);
+        container.addView(gameSurface);
+
+        ImageView leaderboardButton = new ImageView(this);
+        leaderboardButton.setImageResource(R.drawable.leaderboard);
+        leaderboardButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, LeaderboardActivity.class);
+            startActivity(intent);
+        });
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        leaderboardButton.setLayoutParams(params);
+        container.addView(leaderboardButton);
+        setContentView(container);
         gameLoopThread = gameSurface.getGameLoopThread();
 
     }

@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,8 +43,8 @@ public class LeaderboardActivity extends AppCompatActivity {
         }
         Collections.sort(scores, Collections.reverseOrder());
 
-        ArrayAdapter<Integer> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, scores);
-        listView.setAdapter(arrayAdapter);
+        LeaderboardAdapter leaderboardAdapter = new LeaderboardAdapter(this, scores);
+        listView.setAdapter(leaderboardAdapter);
     }
 
     @Override

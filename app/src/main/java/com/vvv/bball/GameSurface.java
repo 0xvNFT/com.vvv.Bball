@@ -11,13 +11,18 @@ import android.graphics.Typeface;
 import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
@@ -71,18 +76,39 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback {
                 editor.apply();
 
 
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Time's Up!")
-                        .setMessage("Your score is: " + score)
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                View view = inflater.inflate(R.layout.custom_dialog, null);
+
+                TextView title = view.findViewById(R.id.title);
+                TextView message = view.findViewById(R.id.message);
+                title.setText("Time's Up!");
+                message.setText("Your score is: " + score);
+
+                builder.setView(view)
                         .setPositiveButton("Go to Leaderboard", (dialog, which) -> {
                             Intent intent = new Intent(getContext(), LeaderboardActivity.class);
                             getContext().startActivity(intent);
                         })
                         .setNeutralButton("Next Level", (dialog, which) -> resetGame())
-                        .setCancelable(false)
-                        .show();
-            }
+                        .setCancelable(false);
 
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+                Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawableResource(R.drawable.ground);
+
+                dialog.setOnShowListener(dialogInterface -> {
+                    Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    positiveButton.setTextColor(Color.BLUE);
+                    positiveButton.setTextSize(18);
+
+                    Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+                    neutralButton.setTextColor(Color.GREEN);
+                    neutralButton.setTextSize(18);
+                });
+                dialog.show();
+            }
         };
 
         scorePaint.setColor(Color.WHITE);
